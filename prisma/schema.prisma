@@ -1,0 +1,168 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        Int     @id @default(autoincrement())
+  name      String @default("Por default")
+  userName  String  @default("Por default")
+  gender    Gender?
+  dni       Int     @unique @default(1234)
+  birthday  String? //Fijarse el tipo de dato de Date, y hablarlo con el front.
+  cellphone Int @default(1234)
+  mail      String? @unique @default("Por default")//Ver si es unique para el ingreso o solo por name
+  image     String @default("Por default")
+  password  String @default("Por default")//Fijarse en la documentación que posibilidades hay 
+  player    Player?  @relation(fields: [playerId], references: [id])
+  playerId  Int?
+  timetable TimeTable[]
+  googleId  String? 
+  team      Team[]
+
+}
+
+model Player {
+  id            Int      @id @default(autoincrement())
+  position      Position
+  qualification Int      @default(3)
+  votes         Int      @default(1)
+  available     Boolean  @default(false)
+  user          User[]
+  team          Team[]   @relation("Players_Teams", references:[id])
+  notificaction Notification[]
+  notificactionTeams NotificationTeams[]
+}
+
+model Team {
+  id            Int      @id @default(autoincrement())
+  name          String
+  image         String?
+  qualification Int      @default(3)
+  votes         Int      @default(1)
+  available     Boolean  @default(true)
+  user          User     @relation(fields: [userId], references: [id])
+  userId        Int
+  player        Player[] @relation("Players_Teams", references:[id])
+  notificaction Notification[]
+  notificactionTeams NotificationTeams[]
+}
+
+
+model Field {
+  id                   Int                   @id @default(autoincrement())
+  name                 String
+  address              String
+  inicialTime          String // cambio de modelo se agrego inicialTime y endTime
+  endTime              String
+  cost                 Int //Ver si se puede poner con signo de peso antes del Int
+  image                String
+  description          String?
+  timetable            TimeTable[]
+  qualification        Int                   @default(3)
+  votes                Int                   @default(1)
+  fieldCharacteristics FieldCharacteristics?
+}
+
+model FieldCharacteristics {
+  id          Int       @id @default(autoincrement())
+  floorType   FloorType
+  light       Boolean
+  soccerField Int       @default(5)
+  roofed      Boolean
+  field       Field     @relation(fields: [fieldId], references: [id])
+  fieldId     Int       @unique
+}
+
+model TimeTable {
+  id       Int    @id @default(autoincrement())
+  day      String
+  hour     String
+  duration Int    @default(1)
+  field    Field  @relation(fields: [fieldId], references: [id])
+  fieldId  Int
+  user     User   @relation(fields: [userId], references: [id])
+  userId   Int
+}
+
+model Notification{
+  id        Int        @id @default(autoincrement())
+  day       String
+  hour      String
+  duration  Int
+  player    Player     @relation(fields: [playerId], references: [id])
+  playerId  Int
+  attending String     @default("PENDING")
+  createdAt DateTime   @default(now())    
+  team     Team        @relation(fields: [teamId], references: [id])
+  teamId   Int
+}
+
+model NotificationTeams {
+  id        Int        @id @default(autoincrement())
+  player    Player     @relation(fields: [playerId], references: [id])
+  playerId  Int
+  attending String     @default("PENDING")
+  createdAt DateTime   @default(now())    
+  team      Team       @relation(fields: [teamId], references: [id])
+  teamId    Int
+
+}
+// model Players_Teams{
+//   team     Team        @relation(fields: [teamId], references: [id])
+//   teamId   Int
+//   player   Player     @relation(fields: [playerId], references: [id])
+//   playerId   Int
+  
+
+// }
+
+
+enum Position {
+  GOALKEEPER
+  DEFENDER
+  MIDFIELDER
+  ATTACKER
+}
+
+enum FloorType {
+  SYNTHETIC
+  GRASS
+  CEMENT
+}
+
+enum Gender {
+  FEMALE
+  MALE
+  UNDEFINED
+}
+
+// enum Attending {
+//   YES
+//   NO
+//   UNDEFINED
+// }
+// model Team_Player {
+//   id Int @id @default(autoincrement())
+//   player Player @relation(fields: [playerId], references: [id])
+//   playerId Int
+//   team Team @relation(fields: [teamId], references: [id])
+//   teamId Int
+//   assignedAt DateTime @default(now())
+// }
+
+// model Field_Timetable {
+//   id Int @id @default(autoincrement())
+//   field Field @relation(fields: [fieldId], references: [id])
+//   fieldId Int
+//   timetable TimeTable @relation(fields: [timetableId], references: [id])
+//   timetableId Int
+//   game Game[]
+// }
